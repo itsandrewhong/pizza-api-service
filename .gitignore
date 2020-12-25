@@ -1,6 +1,9 @@
 # System Files
 .DS_Store
 
+# DB Connection String
+cstrings.config
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
