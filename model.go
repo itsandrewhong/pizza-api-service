@@ -6,19 +6,33 @@ import (
 )
 
 type customer struct {
-	ID    int     `json:"id"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
+	CustomerID          int    `json:"customerId"`
+	FirstName           string `json:"firstName"`
+	LastName            string `json:"lastName"`
+	CustomerPhoneNumber string `json:"customerPhoneNumber"`
+	IsDeleted           bool   `json:"isDeleted"`
 }
 
 type order struct {
-	ID    int     `json:"id"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
+	OrderID             int     `json:"orderId"`
+	PizzaID             int     `json:"pizzaId"`
+	OrderTime           string  `json:"orderTime"`
+	CustomerPhoneNumber string  `json:"customerPhoneNumber"`
+	OrderStatus         string  `json:"orderStatus"`
+	TotalPrice          float64 `json:"totalPrice"`
+	IsDeleted           bool    `json:"isDeleted"`
 }
 
-func (p *customer) createCustomer(db *sql.DB) error {
-	return errors.New("Not Implemented Yet")
+func (c *customer) createCustomer(db *sql.DB) error {
+	// err := db.QueryRow("INSERT INTO CUSTOMERS(firstName, lastName, customerPhoneNumber, isDeleted) VALUES ($1, $2, $3, FALSE) RETURNING customerId", c.FirstName, c.LastName, c.CustomerPhoneNumber).Scan(&c.CustomerID)
+
+	err := db.QueryRow("CALL PAS_SP_CREATE_CUSTOMER($1, $2, $3)", c.FirstName, c.LastName, c.CustomerPhoneNumber).Scan(&c.CustomerID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *order) createOrder(db *sql.DB) error {

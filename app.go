@@ -31,8 +31,9 @@ func (a *App) Initialize() {
 }
 
 // Run the application
-func (a *App) Run(address string) {
-	log.Fatal(http.ListenAndServe(address, a.Router))
+func (a *App) Run(addr string) {
+	log.Println("listen on", addr)
+	log.Fatal(http.ListenAndServe(addr, a.Router))
 }
 
 // Initialize routes
@@ -75,7 +76,7 @@ func (a *App) createCustomer(w http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
 
 	if err := decoder.Decode(&p); err != nil {
-		responseErrorHandler(w, http.StatusBadRequest, "Invalid Request")
+		responseErrorHandler(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
 	defer req.Body.Close()
