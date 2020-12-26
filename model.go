@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 )
 
 type customer struct {
@@ -23,6 +22,7 @@ type order struct {
 	IsDeleted           bool    `json:"isDeleted"`
 }
 
+// Create a customer
 func (c *customer) createCustomer(db *sql.DB) error {
 	// err := db.QueryRow("INSERT INTO CUSTOMERS(firstName, lastName, customerPhoneNumber, isDeleted) VALUES ($1, $2, $3, FALSE) RETURNING customerId", c.FirstName, c.LastName, c.CustomerPhoneNumber).Scan(&c.CustomerID)
 
@@ -35,10 +35,18 @@ func (c *customer) createCustomer(db *sql.DB) error {
 	return nil
 }
 
-func (p *order) createOrder(db *sql.DB) error {
-	return errors.New("Not Implemented Yet")
+// Create an order
+func (o *order) createOrder(db *sql.DB) error {
+	err := db.QueryRow("CALL PAS_SP_CREATE_ORDER($1, $2)", o.PizzaID, o.CustomerPhoneNumber).Scan(&o.OrderID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (p *order) getStatus(db *sql.DB) error {
-	return errors.New("Not Implemented Yet")
+// Get order status
+func (o *order) getStatus(db *sql.DB) error {
+	return db.QueryRow("CALL PAS_SP_GET_ORDER_STATUS_BY_ORDERNUMBER($1)", o.OrderID).Scan(&o.OrderStatus)
 }

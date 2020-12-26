@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -39,17 +40,16 @@ func (a *App) Run(addr string) {
 // Initialize routes
 func (a *App) initializeRoutes() {
 	// Create a new customer
-	a.Router.HandleFunc("/customer", a.createCustomer).Methods("POST")
+	a.Router.HandleFunc("/customer", a.createCustomerHandler).Methods("POST")
 	// Create a new order
-	a.Router.HandleFunc("/order", a.createOrder).Methods("POST")
+	a.Router.HandleFunc("/order", a.createOrderHandler).Methods("POST")
 	// Get status of the order
-	a.Router.HandleFunc("/order/{id:[0-9]+}", a.getStatus).Methods("GET")
+	a.Router.HandleFunc("/order/{id:[0-9]+}", a.getStatusHandler).Methods("GET")
 }
 
 // Helper: Get DB connection string from file
 func getConnString() string {
 	conString, err := ioutil.ReadFile("cstrings.config")
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,31 +70,67 @@ func responseWriter(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-// Create a new customer give nthe HTTP request
-func (a *App) createCustomer(w http.ResponseWriter, req *http.Request) {
-	var p customer
+// Handler to create a new customer.
+// Takes a request body in JSON format and uses 'createCustomer' to create a customer.
+func (a *App) createCustomerHandler(w http.ResponseWriter, req *http.Request) {
+	var c customer
 	decoder := json.NewDecoder(req.Body)
 
-	if err := decoder.Decode(&p); err != nil {
+	if err := decoder.Decode(&c); err != nil {
 		responseErrorHandler(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
 	defer req.Body.Close()
 
-	if err := p.createCustomer(a.DB); err != nil {
+	if err := c.createCustomer(a.DB); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	responseWriter(w, http.StatusCreated, p)
+	responseWriter(w, http.StatusCreated, c)
 }
 
-// Create a new order given the HTTP request
-func (a *App) createOrder(w http.ResponseWriter, req *http.Request) {
+// Handler to create a new order.
+func (a *App) createOrderHandler(w http.ResponseWriter, req *http.Request) {
+	var o order
+	decoder := json.NewDecoder(req.Body)
 
+	if err := decoder.Decode(&o); err != nil {
+		responseErrorHandler(w, http.StatusBadRequest, "Bad Request")
+		return
+	}
+	defer req.Body.Close()
+
+	if err := o.createOrder(a.DB); err != nil {
+		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	responseWriter(w, http.StatusCreated, o)
 }
 
-// Fetch the order status given the HTTP request
-func (a *App) getStatus(w http.ResponseWriter, r *http.Request) {
+// Handler to fetch the order status.
+// Retrieves the order id and returns the order status.
+// If order is not found, respond with status code 404,
+// If found, return the order status.
+func (a *App) getStatusHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orderID, err := strconv.Atoi(vars["orderId"])
+	if err != nil {
+		responseErrorHandler(w, http.StatusBadRequest, "Invalid order ID")
+		return
+	}
 
+	o := order{OrderID: orderID}
+	if err := o.getStatus(a.DB); err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			responseErrorHandler(w, http.StatusNotFound, "Order not found")
+		default:
+			responseErrorHandler(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	responseWriter(w, http.StatusOK, o)
 }
