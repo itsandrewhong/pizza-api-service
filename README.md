@@ -25,7 +25,8 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 - ***NOTE: The application is hosted on Heroku (free-tier). The DB will sleep after a half hour of inactivity, and it causes a delay of a few seconds for the first request upon waking.***
 
 ## Create a new customer
-* A phone number must be a non-null string consisting exactly ten digits without country code (e.g. +1)
+* A phone number is unique. A customer can only create one account using the same phone number. 
+* A phone number must be a non-null string consisting exactly ten digits without country code (e.g. 8125984475).
 ```bash
 # Request
 curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "lastName":"Raymond", "customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/customer/add'
@@ -35,7 +36,7 @@ curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "las
 ```
 
 ## Get the list of available pizzas
-* Displays the list of available pizzas
+* Displays the list of available pizzas.
 ```bash
 # Request
 curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/pizza/show'
@@ -53,6 +54,8 @@ curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.her
 ```
 
 ## Create a new order
+* A customer can create multiple orders.
+* An orderID is returned as the HTTP Response and this orderID will be used to track the progress of the order, cancel/update the order.
 ```bash
 # Request
 curl -v -XPOST -H "Content-type: application/json" -d '{"pizzaId": 4, "customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/order/add'
@@ -85,6 +88,7 @@ curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.her
 
 # Get the list of orders by specific phone number
 * Displays the list of orders by a specific phone number
+* Customers can retrieve their order id, order status, order time, etc.
 ```bash
 # Request
 curl -v -XGET -H "Content-type: application/json" -d '{"customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/order/show'
