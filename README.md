@@ -5,22 +5,22 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 - ***NOTE: The application is hosted on Heroku (free-tier). The DB will sleep after a half hour of inactivity, and it causes a delay of a few seconds for the first request upon waking.***
 ```bash
 # Create a customer
-curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "lastName":"Raymond", "customerPhoneNumber":"8481259874"}' 'https://pizza-api-service.herokuapp.com/customer'
+curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "lastName":"Raymond", "customerPhoneNumber":"8481259874"}' 'https://pizza-api-service.herokuapp.com/customer/add'
 
 # Get the list of available pizzas
-curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/pizza'
+curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/pizza/show'
 
 # Create an order
-curl -v -XPOST -H "Content-type: application/json" -d '{"pizzaId": 2, "customerPhoneNumber":"8481259874"}' 'https://pizza-api-service.herokuapp.com/order'
+curl -v -XPOST -H "Content-type: application/json" -d '{"pizzaId": 2, "customerPhoneNumber":"8481259874"}' 'https://pizza-api-service.herokuapp.com/order/add'
 
 # Check status of the order
-curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/2'
+curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/2'
 
 # Cancel an order
-curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/2'
+curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/update/2'
 
 # Get order info
-curl -v -XGET -H "Content-type: application/json" -d '{"customerPhoneNumber":"8481259874"}' 'https://pizza-api-service.herokuapp.com/order'
+curl -v -XGET -H "Content-type: application/json" -d '{"customerPhoneNumber":"8481259874"}' 'https://pizza-api-service.herokuapp.com/order/show'
 ```
 
 ## Pizza Ordering System business logic:
@@ -31,9 +31,9 @@ curl -v -XGET -H "Content-type: application/json" -d '{"customerPhoneNumber":"84
 - Get order info with phone number.
 
 ## File Structure
-`main.go`: Initializes DB connection and Runs the application.
-`app.go`: Contains the API business logic, definition to connect app with the DB, and definition to run the application.
-`model.go`: Setup structs to connect Golang with DB(Postgres) and interacts with the Database.
+* `main.go`: Initializes DB connection and Runs the application.
+* `app.go`: Contains the API business logic, definition to connect app with the DB, and definition to run the application.
+* `model.go`: Setup structs to connect Golang with DB(Postgres) and interacts with the Database.
 
 ## App Dependencies
 1. 'mux' - Gorilla Mux router

@@ -42,17 +42,17 @@ func (a *App) Run(addr string) {
 // Initialize routes
 func (a *App) initializeRoutes() {
 	// Create a new customer
-	a.Router.HandleFunc("/customer", a.createCustomerHandler).Methods("POST")
+	a.Router.HandleFunc("/customer/add", a.createCustomerHandler).Methods("POST")
 	// Create a new order
-	a.Router.HandleFunc("/order", a.createOrderHandler).Methods("POST")
+	a.Router.HandleFunc("/order/add", a.createOrderHandler).Methods("POST")
 	// Get status of the order
-	a.Router.HandleFunc("/order/{orderId:[0-9]+}", a.getStatusHandler).Methods("GET")
+	a.Router.HandleFunc("/order/show/{orderId:[0-9]+}", a.getStatusHandler).Methods("GET")
 	// Cancel an order
-	a.Router.HandleFunc("/order/{orderId:[0-9]+}", a.cancelOrderHandler).Methods("PUT")
+	a.Router.HandleFunc("/order/update/{orderId:[0-9]+}", a.cancelOrderHandler).Methods("PUT")
 	// Get the list of order
-	a.Router.HandleFunc("/order", a.getOrdersHandler).Methods("GET")
+	a.Router.HandleFunc("/order/show", a.getOrdersHandler).Methods("GET")
 	// Get the list of available pizzas
-	a.Router.HandleFunc("/pizza", a.getAvailablePizzasHandler).Methods("GET")
+	a.Router.HandleFunc("/pizza/show", a.getAvailablePizzasHandler).Methods("GET")
 }
 
 // Helper: Handle error message
