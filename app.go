@@ -110,8 +110,13 @@ func (a *App) createCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create a HTTP Response payload
+	payload := map[string]string{
+		"customerPhoneNumber": c.CustomerPhoneNumber,
+	}
+
 	// Write HTTP response
-	responseWriter(w, http.StatusCreated, c.CustomerPhoneNumber)
+	responseWriter(w, http.StatusCreated, payload)
 }
 
 // Handler to create a new order.
@@ -138,8 +143,13 @@ func (a *App) createOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create a HTTP Response payload
+	payload := map[string]int{
+		"orderId": o.OrderID,
+	}
+
 	// Write HTTP response
-	responseWriter(w, http.StatusCreated, o.OrderID)
+	responseWriter(w, http.StatusCreated, payload)
 }
 
 // Handler to fetch the order status.
@@ -166,8 +176,13 @@ func (a *App) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create a HTTP Response payload
+	payload := map[string]string{
+		"orderStatus": s.StatusName,
+	}
+
 	// Write HTTP response
-	responseWriter(w, http.StatusOK, s.StatusName)
+	responseWriter(w, http.StatusOK, payload)
 }
 
 // Handler to cancel an order
@@ -180,9 +195,6 @@ func (a *App) cancelOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// var o order
-	// o.OrderID = orderID
-
 	var s status
 
 	// Write to DB (Update a row)
@@ -192,13 +204,12 @@ func (a *App) cancelOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a HTTP Response payload
-	// payload := map[string]string{
-	// 	"orderId":    strconv.Itoa(orderID),
-	// 	"statusName": s.StatusName,
-	// }
+	payload := map[string]string{
+		"orderStatus": s.StatusName,
+	}
 
 	// Write HTTP response
-	responseWriter(w, http.StatusOK, s.StatusName)
+	responseWriter(w, http.StatusOK, payload)
 }
 
 // Handler to fetch orders given the customer phone number
@@ -282,7 +293,6 @@ func (a *App) updateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a HTTP Response payload
-	// Payload contains the orderId and orderStatus
 	payload := map[string]interface{}{
 		"orderId":     strconv.Itoa(o.OrderID),
 		"orderStatus": fmt.Sprintf("%v", o.OrderStatus),
