@@ -14,9 +14,11 @@ curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.her
 curl -v -XPOST -H "Content-type: application/json" -d '{"pizzaId": 2, "customerPhoneNumber":"8481259874"}' 'https://pizza-api-service.herokuapp.com/order/add'
 
 # Check status of the order
+# curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/<orderId>'
 curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/2'
 
 # Cancel an order
+# curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/update/<orderId>'
 curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/update/2'
 
 # Get order info
