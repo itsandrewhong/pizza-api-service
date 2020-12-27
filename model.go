@@ -79,7 +79,7 @@ func (o *order) getOrders(db *sql.DB) ([]order, error) {
 	return orders, nil
 }
 
-// Get avilable pizzas
+// Get the list of available pizzas
 func (p *pizza) getAvailablePizzas(db *sql.DB) ([]pizza, error) {
 	// Run the query
 	rows, err := db.Query(

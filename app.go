@@ -49,9 +49,9 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/order/{orderId:[0-9]+}", a.getStatusHandler).Methods("GET")
 	// Cancel an order
 	a.Router.HandleFunc("/order/{orderId:[0-9]+}", a.cancelOrderHandler).Methods("PUT")
-	// Get orders
+	// Get the list of order
 	a.Router.HandleFunc("/order", a.getOrdersHandler).Methods("GET")
-	// Get available pizzas
+	// Get the list of available pizzas
 	a.Router.HandleFunc("/pizza", a.getAvailablePizzasHandler).Methods("GET")
 }
 
@@ -230,7 +230,7 @@ func (a *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	responseWriter(w, http.StatusOK, orders)
 }
 
-// Handler to fetch available pizzas
+// Handler to fetch the list of available pizzas
 func (a *App) getAvailablePizzasHandler(w http.ResponseWriter, r *http.Request) {
 	var p pizza
 

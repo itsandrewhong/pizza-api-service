@@ -7,7 +7,6 @@ import (
 
 func main() {
 	a := App{}
-
 	a.Initialize()
 
 	// local test
@@ -15,7 +14,6 @@ func main() {
 
 	// Get port from Heroku Environment
 	port := os.Getenv("PORT")
-
 	if port == "" {
 		log.Fatal("$PORT must be set")
 	}

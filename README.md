@@ -7,9 +7,8 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 # Create a customer
 curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "lastName":"Raymond", "customerPhoneNumber":"8481259874"}' 'https://pizza-api-service.herokuapp.com/customer'
 
-# Get available pizzas
-
-
+# Get the list of available pizzas
+curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/pizza'
 
 # Create an order
 curl -v -XPOST -H "Content-type: application/json" -d '{"pizzaId": 2, "customerPhoneNumber":"8481259874"}' 'https://pizza-api-service.herokuapp.com/order'
@@ -74,7 +73,7 @@ CREATE PROCEDURE PAS_SP_GET_ORDER_STATUS_BY_ORDERNUMBER(
 )
 LANGUAGE SQL
 AS $$
-	SELECT o.orderstatus FROM ORDERS o WHERE o.orderId = p_orderId;
+	SELECT o.orderstatus FROM ORDERS o WHERE o.orderId = p_orderId AND o.isDeleted = FALSE;
 $$;
 
 -- Cancel an order (PAS_SP_CANCEL_ORDER)
