@@ -31,7 +31,7 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 
 ## Open Endpoints
 Open endpoints require no Authentication.
-* Create a new customer : `POST api/customer/add`
+* Create a new customer : `POST /customer/add`
 * 
 
 
