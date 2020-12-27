@@ -55,8 +55,11 @@ func (a *App) initializeRoutes() {
 	// Get the list of available pizzas
 	a.Router.HandleFunc("/pizza/show", a.getAvailablePizzasHandler).Methods("GET")
 
-	// updateOrderStatusHandler
-	//
+	// Get the list of order status
+	a.Router.HandleFunc("/order/codes", a.getStatusCodeHandler).Methods("GET")
+
+	// Update the order status
+	a.Router.HandleFunc("/order/update", a.updateOrderStatusHandler).Methods("PUT")
 }
 
 // Helper: Handle error message
@@ -261,18 +264,18 @@ func (a *App) getStatusCodeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handler to update an order status
+// Receives HTTP Body data
 // Used by store employees
 func (a *App) updateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
-	// Create route variable and retrieve 'orderId' from a Request URL
-	vars := mux.Vars(r)
-	orderID, err := strconv.Atoi(vars["orderId"])
-	if err != nil {
-		responseErrorHandler(w, http.StatusBadRequest, "Invalid order ID")
+	var o order
+	decoder := json.NewDecoder(r.Body)
+
+	// Decode the HTTP Body Data
+	if err := decoder.Decode(&o); err != nil {
+		responseErrorHandler(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
-
-	var o order
-	o.OrderID = orderID
+	defer r.Body.Close()
 
 	// Write to DB (Update a row)
 	if err := o.updateOrderStatus(a.DB); err != nil {
