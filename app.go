@@ -51,6 +51,8 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/order/{orderId:[0-9]+}", a.cancelOrderHandler).Methods("PUT")
 	// Get orders
 	a.Router.HandleFunc("/order", a.getOrdersHandler).Methods("GET")
+	// Get available pizzas
+	a.Router.HandleFunc("/pizza", a.getAvailablePizzasHandler).Methods("GET")
 }
 
 // Helper: Handle error message
@@ -219,6 +221,21 @@ func (a *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get data from DB
 	orders, err := o.getOrders(a.DB)
+	if err != nil {
+		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Write HTTP response
+	responseWriter(w, http.StatusOK, orders)
+}
+
+// Handler to fetch available pizzas
+func (a *App) getAvailablePizzasHandler(w http.ResponseWriter, r *http.Request) {
+	var p pizza
+
+	// Get data from DB
+	orders, err := p.getAvailablePizzas(a.DB)
 	if err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return

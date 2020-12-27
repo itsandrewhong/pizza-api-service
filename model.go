@@ -21,6 +21,12 @@ type order struct {
 	TotalPrice          float64   `json:"totalPrice"`
 }
 
+type pizza struct {
+	PizzaID    int     `json:"pizzaId"`
+	PizzaName  string  `json:"pizzaName"`
+	PizzaPrice float64 `json:"pizzaPrice"`
+}
+
 // Create a customer
 func (c *customer) createCustomer(db *sql.DB) error {
 	err := db.QueryRow("CALL PAS_SP_CREATE_CUSTOMER($1, $2, $3)", c.FirstName, c.LastName, c.CustomerPhoneNumber).Scan(&c.CustomerID)
@@ -55,7 +61,7 @@ func (o *order) cancelOrder(db *sql.DB) error {
 func (o *order) getOrders(db *sql.DB) ([]order, error) {
 	// Run the query
 	rows, err := db.Query(
-		"SELECT customerPhoneNumber, orderId, orderTime, pizzaId, totalPrice, orderStatus FROM ORDERS WHERE customerPhoneNumber = $1", o.CustomerPhoneNumber)
+		"SELECT customerPhoneNumber, orderId, orderTime, pizzaId, totalPrice, orderStatus FROM ORDERS WHERE customerPhoneNumber = $1 AND isDeleted = FALSE", o.CustomerPhoneNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -71,4 +77,26 @@ func (o *order) getOrders(db *sql.DB) ([]order, error) {
 	}
 
 	return orders, nil
+}
+
+// Get avilable pizzas
+func (p *pizza) getAvailablePizzas(db *sql.DB) ([]pizza, error) {
+	// Run the query
+	rows, err := db.Query(
+		"SELECT pizzaId, pizzaName, pizzaPrice FROM PIZZAS WHERE isDeleted = FALSE")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Create a 'pizzas' list and append each resulting row to the list
+	pizzas := []pizza{}
+	for rows.Next() {
+		if err := rows.Scan(&p.PizzaID, &p.PizzaName, &p.PizzaPrice); err != nil {
+			return nil, err
+		}
+		pizzas = append(pizzas, *p)
+	}
+
+	return pizzas, nil
 }
