@@ -1,0 +1,15 @@
+# github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
+## explicit
+# github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
+## explicit
+github.com/go-ozzo/ozzo-validation
+# github.com/gorilla/mux v1.8.0
+## explicit
+github.com/gorilla/mux
+# github.com/lib/pq v1.9.0
+## explicit
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
+# github.com/stretchr/testify v1.6.1
+## explicit

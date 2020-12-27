@@ -3,9 +3,9 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 
@@ -21,13 +21,9 @@ type App struct {
 
 // Initialize a connection with the DB and initialize the router
 func (a *App) Initialize() {
-
-	// Get connection string
-	connString := getConnString()
-
-	// Connect to the DB
+	// Connect to the DB (Heroku Postgres)
 	var err error
-	a.DB, err = sql.Open("postgres", connString)
+	a.DB, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,16 +51,6 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/order/{orderId:[0-9]+}", a.cancelOrderHandler).Methods("PUT")
 	// Get orders
 	a.Router.HandleFunc("/order", a.getOrdersHandler).Methods("GET")
-}
-
-// Helper: Get DB connection string from file
-func getConnString() string {
-	conString, err := ioutil.ReadFile("cstrings.config")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return string(conString)
 }
 
 // Helper: Handle error message
