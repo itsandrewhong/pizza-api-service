@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
@@ -70,6 +72,29 @@ func responseWriter(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
+// Customer struct validator
+func (c *customer) ValidateCreateCustomer() error {
+	return validation.ValidateStruct(&c,
+		// FirstName and LastName cannot be empty
+		validation.Field(&c.FirstName, validation.Required),
+		validation.Field(&c.LastName, validation.Required),
+
+		// CustomerPhoneNumber cannot be empty, and must be a string consisting of ten digits
+		validation.Field(&c.CustomerPhoneNumber, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{10}$"))),
+	)
+}
+
+// Order struct validator
+func (o *order) ValicateCreateOrder() error {
+	return validation.ValidateStruct(&o,
+		// OrderID cannot be empty, and the length must be greater than 1
+		validation.Field(&o.OrderID, validation.Required, validation.Match(regexp.MustCompile("^[0-9]+$"))),
+
+		// CustomerPhoneNumber cannot be empty, and must be a string consisting of ten digits
+		validation.Field(&o.CustomerPhoneNumber, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{10}$"))),
+	)
+}
+
 // Handler to create a new customer.
 // Takes a request body in JSON format and uses 'createCustomer' to create a customer.
 func (a *App) createCustomerHandler(w http.ResponseWriter, req *http.Request) {
@@ -81,6 +106,12 @@ func (a *App) createCustomerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer req.Body.Close()
+
+	// Validate input
+	if err := c.ValidateCreateCustomer(); err != nil {
+		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	if err := c.createCustomer(a.DB); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
@@ -100,6 +131,12 @@ func (a *App) createOrderHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer req.Body.Close()
+
+	// Validate input
+	if err := o.ValicateCreateOrder(); err != nil {
+		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	if err := o.createOrder(a.DB); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
