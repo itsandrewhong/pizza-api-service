@@ -5,6 +5,5 @@ func main() {
 	port := "8000"
 
 	a.Initialize()
-
 	a.Run(":" + port)
 }
