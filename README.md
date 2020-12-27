@@ -8,8 +8,8 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 - **Fetch** the list of available pizzas in response to a valid `GET` request at `/pizza/show`.
 - **Cancel** an order in response to a valid `PUT` request at `/order/update/<orderId>` with order ID.
 - **Fetch** the list of orders by specific phone number in response to a valid `GET` request at `/order/show` with customer phone number.
-- **Fetch** the list of order status code in response to a valid `GET` request at `/status_code/show` with customer phone number.
-- **Update** an order in response to a valid `PUT` request at `/order/update` with order ID and order status code.
+- **Fetch** the list of order status code in response to a valid `GET` request at `/status_code/show`. (Store Only)
+- **Update** an order in response to a valid `PUT` request at `/order/update` with order ID and order status code. (Store Only)
 
 ## App Dependencies
 1. 'mux' - Gorilla Mux router, used to create complex routing and managing requests
@@ -21,24 +21,18 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 * `app.go`: Contains the API business logic, definition to connect app with the DB, and definition to run the application.
 * `model.go`: Setup structs to connect Golang with DB(Postgres) and interacts with the Database.
 
-# Test the application via cURL commands
+# Example) Test the application via cURL commands
 - ***NOTE: The application is hosted on Heroku (free-tier). The DB will sleep after a half hour of inactivity, and it causes a delay of a few seconds for the first request upon waking.***
 
 ## Create a new customer
+* A phone number must be a non-null string consisting exactly ten digits without country code (e.g. +1)
 ```bash
 # Request
-# Note: A phone number must be a non-null string consisting exactly ten digits without country code (e.g. +1)
-curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "lastName":"Raymond", "customerPhoneNumber":"8485941259"}' 'https://pizza-api-service.herokuapp.com/customer/add'
+curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "lastName":"Raymond", "customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/customer/add'
 
 # Response
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:30 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 2
+{"customerPhoneNumber":"8125984475"}*
 ```
-
 
 ## Get the list of available pizzas
 * Displays the list of available pizzas
@@ -61,20 +55,21 @@ curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.her
 ## Create a new order
 ```bash
 # Request
-curl -v -XPOST -H "Content-type: application/json" -d '{"pizzaId": 2, "customerPhoneNumber":"8485941259"}' 'https://pizza-api-service.herokuapp.com/order/add'
+curl -v -XPOST -H "Content-type: application/json" -d '{"pizzaId": 4, "customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/order/add'
 
 # Response
+{"orderId":9}
 ```
-
 
 ## Check status of the order
 * Allows to check the status of the order
 ```bash
 # Request
 # curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/<orderId>'
-curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/2'
+curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/9'
 
 # Response
+{"orderStatus":"Order Received"}
 ```
 
 ## Cancel an order
@@ -82,19 +77,20 @@ curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.her
 ```bash
 # Request
 # curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/update/<orderId>'
-curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/update/2'
+curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/update/9'
 
 # Response
+{"orderStatus":"Canceled"}
 ```
 
 # Get the list of orders by specific phone number
 * Displays the list of orders by a specific phone number
 ```bash
 # Request
-curl -v -XGET -H "Content-type: application/json" -d '{"customerPhoneNumber":"8485941259"}' 'https://pizza-api-service.herokuapp.com/order/show'
-
+curl -v -XGET -H "Content-type: application/json" -d '{"customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/order/show'
 
 # Response
+[{"orderId":9,"pizzaId":4,"orderTime":"2020-12-27T21:56:41.636116Z","customerPhoneNumber":"8125984475","orderStatus":"Canceled","totalPrice":8.49}]
 ```
 
 # Store Only: Get the list of order status
@@ -117,15 +113,71 @@ curl -XGET -H "Content-type: application/json" 'https://pizza-api-service.heroku
 # Request
 # curl -v -XPUT -H "Content-type: application/json" -d '{"orderId": <orderId>, "orderStatus":<orderStatusCode>}' 'https://pizza-api-service.herokuapp.com/order/update'
 
-curl -v -XPUT -H "Content-type: application/json" -d '{"orderId": 2, "orderStatus":5}' 'https://pizza-api-service.herokuapp.com/order/update'
+curl -v -XPUT -H "Content-type: application/json" -d '{"orderId": 9, "orderStatus":2}' 'https://pizza-api-service.herokuapp.com/order/update'
 
 # Response
-{"orderId":"2","orderStatus":"Canceled"}
+{"orderId":"9","orderStatus":"Making Your Pizza"}
 ```
-
 
 ## Database: Stored Procedure Definitions
 ```sql
+-- Create a customer (PAS_SP_CREATE_CUSTOMER)
+CREATE PROCEDURE PAS_SP_CREATE_CUSTOMER(
+	IN p_firstName VARCHAR(50),
+	IN p_lastName VARCHAR(50),
+	IN p_customerPhoneNumber VARCHAR(20),
+	INOUT _customerId INTEGER DEFAULT null
+)
+LANGUAGE SQL
+AS $$
+	INSERT INTO CUSTOMERS VALUES (DEFAULT, TRIM(p_firstName), TRIM(p_lastName), TRIM(p_customerPhoneNumber), FALSE) RETURNING customerId;
+$$;
 
+-- Create an order (PAS_SP_CREATE_ORDER)
+CREATE PROCEDURE PAS_SP_CREATE_ORDER(
+	IN p_pizzaId INTEGER,
+	IN p_customerPhoneNumber VARCHAR(20),
+	INOUT _orderId INTEGER DEFAULT null
+)
+LANGUAGE SQL
+AS $$
+	INSERT INTO ORDERS VALUES (DEFAULT, p_pizzaId, CURRENT_TIMESTAMP, TRIM(p_customerPhoneNumber), 1, 
+		ROUND(((SELECT p.pizzaPrice FROM PIZZAS p where p.pizzaId = p_pizzaId) * 1.0625), 2), 
+		FALSE) RETURNING orderId;
+$$;
 
+-- Fetch an order status (PAS_SP_GET_ORDER_STATUS_BY_ORDERNUMBER)
+CREATE PROCEDURE PAS_SP_GET_ORDER_STATUS_BY_ORDERNUMBER(
+	IN p_orderId INTEGER,
+	INOUT _orderStatus VARCHAR(30) DEFAULT null
+)
+LANGUAGE SQL
+AS $$
+	SELECT sc.statusName FROM ORDERS AS o INNER JOIN ORDER_STATUS_CODES AS sc ON o.statusId = sc.statusId WHERE o.orderId = p_orderId;
+$$;
+
+-- Cancel an order (PAS_SP_CANCEL_ORDER)
+CREATE PROCEDURE PAS_SP_CANCEL_ORDER(
+	IN p_orderId INTEGER,
+	INOUT _orderStatus VARCHAR(30) DEFAULT null
+)
+LANGUAGE SQL
+AS $$
+	UPDATE ORDERS SET statusId = 5 WHERE orderId = p_orderId;	
+	SELECT sc.statusName FROM ORDERS AS o INNER JOIN ORDER_STATUS_CODES AS sc ON o.statusId = sc.statusId WHERE o.orderId = p_orderId;
+$$;
+
+-- Update an order status (PAS_SP_UPDATE_ORDER_STATUS)
+CALL PAS_SP_UPDATE_ORDER_STATUS(1, 1);
+
+CREATE PROCEDURE PAS_SP_UPDATE_ORDER_STATUS(
+	IN p_orderId INTEGER,
+	IN p_statusId INTEGER,
+	INOUT _orderStatus VARCHAR(30) DEFAULT null
+)
+LANGUAGE SQL
+AS $$
+	UPDATE ORDERS SET statusId = p_statusId WHERE orderId = p_orderId;
+	SELECT sc.statusName FROM ORDERS AS o INNER JOIN ORDER_STATUS_CODES AS sc ON o.statusId = sc.statusId WHERE o.orderId = p_orderId;
+$$;
 ```
