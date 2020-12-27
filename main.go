@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+	// Create an app struct and initialize the DB connection
 	a := App{}
 	a.Initialize()
 
@@ -18,5 +19,6 @@ func main() {
 		log.Fatal("$PORT must be set")
 	}
 
+	// Run the API Server
 	a.Run(":" + port)
 }

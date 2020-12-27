@@ -49,7 +49,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/order/show/{orderId:[0-9]+}", a.getStatusHandler).Methods("GET")
 	// Cancel an order
 	a.Router.HandleFunc("/order/update/{orderId:[0-9]+}", a.cancelOrderHandler).Methods("PUT")
-	// Get the list of order
+	// Get list of orders by specific phone number
 	a.Router.HandleFunc("/order/show", a.getOrdersHandler).Methods("GET")
 	// Get the list of available pizzas
 	a.Router.HandleFunc("/pizza/show", a.getAvailablePizzasHandler).Methods("GET")

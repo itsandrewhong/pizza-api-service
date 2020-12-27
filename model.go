@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// 'customer' struct
 type customer struct {
 	CustomerID          int    `json:"customerId"`
 	FirstName           string `json:"firstName"`
@@ -12,6 +13,7 @@ type customer struct {
 	CustomerPhoneNumber string `json:"customerPhoneNumber"`
 }
 
+// 'order' struct
 type order struct {
 	OrderID             int       `json:"orderId"`
 	PizzaID             int       `json:"pizzaId"`
@@ -21,6 +23,7 @@ type order struct {
 	TotalPrice          float64   `json:"totalPrice"`
 }
 
+// 'pizza' struct
 type pizza struct {
 	PizzaID    int     `json:"pizzaId"`
 	PizzaName  string  `json:"pizzaName"`
@@ -28,7 +31,10 @@ type pizza struct {
 }
 
 // Create a customer
+// Takes firstName, lastName, and customerPhoneNumber
+// Returns the customerId
 func (c *customer) createCustomer(db *sql.DB) error {
+	// Calls the Stored Procedure and captures the customer id
 	err := db.QueryRow("CALL PAS_SP_CREATE_CUSTOMER($1, $2, $3)", c.FirstName, c.LastName, c.CustomerPhoneNumber).Scan(&c.CustomerID)
 	if err != nil {
 		return err
@@ -38,7 +44,10 @@ func (c *customer) createCustomer(db *sql.DB) error {
 }
 
 // Create an order
+// Takes pizzaId, and customerPhoneNumber
+// Returns the orderId
 func (o *order) createOrder(db *sql.DB) error {
+	// Calls the Stored Procedure and captures the order id
 	err := db.QueryRow("CALL PAS_SP_CREATE_ORDER($1, $2)", o.PizzaID, o.CustomerPhoneNumber).Scan(&o.OrderID)
 	if err != nil {
 		return err
@@ -48,16 +57,22 @@ func (o *order) createOrder(db *sql.DB) error {
 }
 
 // Get order status
+// Takes in the orderId
+// Returns the orderStatus
 func (o *order) getStatus(db *sql.DB) error {
+	// Calls the Stored Procedure 'PAS_SP_GET_ORDER_STATUS_BY_ORDERNUMBER' and captures the order status
 	return db.QueryRow("CALL PAS_SP_GET_ORDER_STATUS_BY_ORDERNUMBER($1)", o.OrderID).Scan(&o.OrderStatus)
 }
 
 // Cancel an order
 func (o *order) cancelOrder(db *sql.DB) error {
+	// Calls the Stored Procedure 'PAS_SP_CANCEL_ORDER'
 	return db.QueryRow("CALL PAS_SP_CANCEL_ORDER($1)", o.OrderID).Scan(&o.OrderStatus)
 }
 
-// Get orders
+// Get list of orders by specific phone number
+// Takes in the customer phone number
+// Returns the list of orders by specific phone number
 func (o *order) getOrders(db *sql.DB) ([]order, error) {
 	// Run the query
 	rows, err := db.Query(
@@ -80,6 +95,7 @@ func (o *order) getOrders(db *sql.DB) ([]order, error) {
 }
 
 // Get the list of available pizzas
+// Returns the list of available pizzas
 func (p *pizza) getAvailablePizzas(db *sql.DB) ([]pizza, error) {
 	// Run the query
 	rows, err := db.Query(
