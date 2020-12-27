@@ -19,7 +19,7 @@ type order struct {
 	PizzaID             int         `json:"pizzaId"`
 	OrderTime           time.Time   `json:"orderTime"`
 	CustomerPhoneNumber string      `json:"customerPhoneNumber"`
-	OrderStatus         interface{} `json:"statusId"`
+	OrderStatus         interface{} `json:"orderStatus"`
 	TotalPrice          float64     `json:"totalPrice"`
 }
 

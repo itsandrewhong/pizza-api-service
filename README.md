@@ -8,6 +8,16 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 - **Fetch** the list of available pizzas in response to a valid `GET` request at `/pizza/show`.
 - **Cancel** an order in response to a valid `PUT` request at `/order/update/` with orderId.
 - **Fetch** the list of order in response to a valid `GET` request at `/order/show/` with customer phone number.
+- 
+
+
+- **Fetch** the list of order status code in response to a valid `GET` request at `/order/show/` with customer phone number.
+- 
+
+
+- **Cancel** an order in response to a valid `PUT` request at `/order/update/` with orderId.
+
+
 
 ## App Dependencies
 1. 'mux' - Gorilla Mux router, used to create complex routing and managing requests
@@ -19,12 +29,46 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 * `app.go`: Contains the API business logic, definition to connect app with the DB, and definition to run the application.
 * `model.go`: Setup structs to connect Golang with DB(Postgres) and interacts with the Database.
 
-## Test the application via cURL commands
+## Open Endpoints
+Open endpoints require no Authentication.
+* Create a new customer : `POST api/customer/add`
+* 
+
+
+
+# Test the application via cURL commands
 - ***NOTE: The application is hosted on Heroku (free-tier). The DB will sleep after a half hour of inactivity, and it causes a delay of a few seconds for the first request upon waking.***
+
+
+## Create a customer
 ```bash
 # Create a customer
 # Note: A phone number must be a non-null string consisting exactly ten digits without country code (e.g. +1)
 curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "lastName":"Raymond", "customerPhoneNumber":"8481259874"}' 'https://pizza-api-service.herokuapp.com/customer/add'
+
+```
+### Request
+`GET /thing/`
+```bash
+curl -i -H 'Accept: application/json' http://localhost:7000/thing/
+```
+
+### Response
+```bash
+    HTTP/1.1 200 OK
+    Date: Thu, 24 Feb 2011 12:36:30 GMT
+    Status: 200 OK
+    Connection: close
+    Content-Type: application/json
+    Content-Length: 2
+```
+
+
+
+
+
+
+```bash
 
 # Get the list of available pizzas
 curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/pizza/show'
