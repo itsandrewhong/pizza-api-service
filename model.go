@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -91,7 +92,7 @@ func (o *order) getOrders(db *sql.DB) ([]order, error) {
 	// Create a 'orders' list and append each resulting row to the list
 	orders := []order{}
 	for rows.Next() {
-		if err := rows.Scan(&o.CustomerPhoneNumber, &o.OrderID, &o.OrderTime, &o.PizzaID, &o.TotalPrice, &o.OrderStatus); err != nil {
+		if err := rows.Scan(&o.CustomerPhoneNumber, &o.OrderID, &o.OrderTime, &o.PizzaID, &o.TotalPrice, fmt.Sprintf("%v", &o.OrderStatus)); err != nil {
 			return nil, err
 		}
 		orders = append(orders, *o)

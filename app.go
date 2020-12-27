@@ -54,6 +54,9 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/order/show", a.getOrdersHandler).Methods("GET")
 	// Get the list of available pizzas
 	a.Router.HandleFunc("/pizza/show", a.getAvailablePizzasHandler).Methods("GET")
+
+	// updateOrderStatusHandler
+	//
 }
 
 // Helper: Handle error message
