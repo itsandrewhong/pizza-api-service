@@ -36,6 +36,7 @@ curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "las
 ```
 
 ## Get the list of available pizzas
+* This application uses a numeric pizzaId to create an order. This way, the store can update the pizza info when needed.
 * Displays the list of available pizzas.
 ```bash
 # Request
@@ -65,7 +66,7 @@ curl -v -XPOST -H "Content-type: application/json" -d '{"pizzaId": 4, "customerP
 ```
 
 ## Check status of the order
-* Allows to check the status of the order
+* Allows to check the status of the order given the orderId in the URL
 ```bash
 # Request
 # curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/<orderId>'
@@ -76,7 +77,7 @@ curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.her
 ```
 
 ## Cancel an order
-* Allows to cancel an order
+* A cusotmer may have changered his/her mind, the application allows to cancel an order given the orderId in the URL
 ```bash
 # Request
 # curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/update/<orderId>'
@@ -87,8 +88,7 @@ curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.her
 ```
 
 # Get the list of orders by specific phone number
-* Displays the list of orders by a specific phone number
-* Customers can retrieve their order id, order status, order time, etc.
+* Customers can view their order history with orderId, order status, etc.
 ```bash
 # Request
 curl -v -XGET -H "Content-type: application/json" -d '{"customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/order/show'
