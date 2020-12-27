@@ -111,7 +111,7 @@ func (a *App) createCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write HTTP response
-	responseWriter(w, http.StatusCreated, c)
+	responseWriter(w, http.StatusCreated, c.CustomerPhoneNumber)
 }
 
 // Handler to create a new order.
@@ -139,7 +139,7 @@ func (a *App) createOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write HTTP response
-	responseWriter(w, http.StatusCreated, o)
+	responseWriter(w, http.StatusCreated, o.OrderID)
 }
 
 // Handler to fetch the order status.
