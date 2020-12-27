@@ -54,10 +54,8 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/order/show", a.getOrdersHandler).Methods("GET")
 	// Get the list of available pizzas
 	a.Router.HandleFunc("/pizza/show", a.getAvailablePizzasHandler).Methods("GET")
-
 	// Get the list of order status
 	a.Router.HandleFunc("/status_code/show", a.getStatusCodeHandler).Methods("GET")
-
 	// Update the order status
 	a.Router.HandleFunc("/order/update", a.updateOrderStatusHandler).Methods("PUT")
 }
