@@ -15,12 +15,12 @@ type customer struct {
 
 // 'order' struct
 type order struct {
-	OrderID             int       `json:"orderId"`
-	PizzaID             int       `json:"pizzaId"`
-	OrderTime           time.Time `json:"orderTime"`
-	CustomerPhoneNumber string    `json:"customerPhoneNumber"`
-	OrderStatus         string    `json:"orderStatus"`
-	TotalPrice          float64   `json:"totalPrice"`
+	OrderID             int         `json:"orderId"`
+	PizzaID             int         `json:"pizzaId"`
+	OrderTime           time.Time   `json:"orderTime"`
+	CustomerPhoneNumber string      `json:"customerPhoneNumber"`
+	OrderStatus         interface{} `json:"statusId"`
+	TotalPrice          float64     `json:"totalPrice"`
 }
 
 // 'pizza' struct
@@ -28,6 +28,12 @@ type pizza struct {
 	PizzaID    int     `json:"pizzaId"`
 	PizzaName  string  `json:"pizzaName"`
 	PizzaPrice float64 `json:"pizzaPrice"`
+}
+
+// 'status' struct
+type status struct {
+	StatusID   int    `json:"statusId"`
+	StatusName string `json:"statusName"`
 }
 
 // Create a customer
@@ -59,15 +65,15 @@ func (o *order) createOrder(db *sql.DB) error {
 // Get order status
 // Takes in the orderId
 // Returns the orderStatus
-func (o *order) getStatus(db *sql.DB) error {
+func (s *status) getStatus(db *sql.DB, orderID int) error {
 	// Calls the Stored Procedure 'PAS_SP_GET_ORDER_STATUS_BY_ORDERNUMBER' and captures the order status
-	return db.QueryRow("CALL PAS_SP_GET_ORDER_STATUS_BY_ORDERNUMBER($1)", o.OrderID).Scan(&o.OrderStatus)
+	return db.QueryRow("CALL PAS_SP_GET_ORDER_STATUS_BY_ORDERNUMBER($1)", orderID).Scan(&s.StatusName)
 }
 
 // Cancel an order
-func (o *order) cancelOrder(db *sql.DB) error {
+func (s *status) cancelOrder(db *sql.DB, orderID int) error {
 	// Calls the Stored Procedure 'PAS_SP_CANCEL_ORDER'
-	return db.QueryRow("CALL PAS_SP_CANCEL_ORDER($1)", o.OrderID).Scan(&o.OrderStatus)
+	return db.QueryRow("CALL PAS_SP_CANCEL_ORDER($1)", orderID).Scan(&s.StatusName)
 }
 
 // Get list of orders by specific phone number
@@ -76,7 +82,7 @@ func (o *order) cancelOrder(db *sql.DB) error {
 func (o *order) getOrders(db *sql.DB) ([]order, error) {
 	// Run the query
 	rows, err := db.Query(
-		"SELECT customerPhoneNumber, orderId, orderTime, pizzaId, totalPrice, orderStatus FROM ORDERS WHERE customerPhoneNumber = $1 AND isDeleted = FALSE", o.CustomerPhoneNumber)
+		"SELECT o.customerPhoneNumber, o.orderId, o.orderTime, o.pizzaId, o.totalPrice, sc.statusName FROM ORDERS AS o INNER JOIN ORDER_STATUS_CODES AS sc ON o.statusId = sc.statusId WHERE customerPhoneNumber = $1 AND o.isDeleted = FALSE", o.CustomerPhoneNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -115,4 +121,33 @@ func (p *pizza) getAvailablePizzas(db *sql.DB) ([]pizza, error) {
 	}
 
 	return pizzas, nil
+}
+
+// Get the list of status code (used by the store employee)
+// Returns the list of status codes
+func (s *status) getStatusCode(db *sql.DB) ([]status, error) {
+	// Run the query
+	rows, err := db.Query("SELECT statusId, statusName FROM ORDER_STATUS_CODES WHERE isDeleted = FALSE")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Create a 'statuses' list and append each resulting row to the list
+	statuses := []status{}
+	for rows.Next() {
+		if err := rows.Scan(&s.StatusID, &s.StatusName); err != nil {
+			return nil, err
+		}
+		statuses = append(statuses, *s)
+	}
+
+	return statuses, nil
+}
+
+// Updates the order status (used by the store employee)
+// Returns
+func (o *order) updateOrderStatus(db *sql.DB) error {
+	// Calls the Stored Procedure 'PAS_SP_UPDATE_ORDER_STATUS'
+	return db.QueryRow("CALL PAS_SP_UPDATE_ORDER_STATUS($1, $2)", o.OrderID, o.OrderStatus).Scan(&o.OrderStatus)
 }

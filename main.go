@@ -10,13 +10,11 @@ func main() {
 	a := App{}
 	a.Initialize()
 
-	// local test
-	// port := "8000"
-
 	// Get port from Heroku Environment
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Fatal("$PORT must be set")
+		port = "8000"
+		log.Println("Local test")
 	}
 
 	// Run the API Server

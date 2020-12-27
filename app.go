@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -68,23 +69,16 @@ func responseWriter(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-// Customer struct validator
-func (c customer) ValidateCreateCustomer() error {
-	return validation.ValidateStruct(&c,
-		// FirstName and LastName cannot be empty
-		validation.Field(&c.FirstName, validation.Required),
-		validation.Field(&c.LastName, validation.Required),
-		// CustomerPhoneNumber cannot be empty, and must be a string consisting of ten digits
-		validation.Field(&c.CustomerPhoneNumber, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{10}$"))),
-	)
-}
+// CustomerPhoneNumber cannot be empty, and must be a string consisting of ten digits
+func validateCustomerPhoneNumber(i interface{}) error {
+	switch v := i.(type) {
+	case order:
+		return validation.ValidateStruct(&v, validation.Field(&v.CustomerPhoneNumber, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{10}$"))))
+	case customer:
+		return validation.ValidateStruct(&v, validation.Field(&v.CustomerPhoneNumber, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{10}$"))))
+	}
 
-// Order struct validator
-func (o order) ValidateCustomerPhoneNumber() error {
-	return validation.ValidateStruct(&o,
-		// CustomerPhoneNumber cannot be empty, and must be a string consisting of ten digits
-		validation.Field(&o.CustomerPhoneNumber, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{10}$"))),
-	)
+	return nil
 }
 
 // Handler to create a new customer.
@@ -101,7 +95,7 @@ func (a *App) createCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Validate input
-	if err := c.ValidateCreateCustomer(); err != nil {
+	if err := validateCustomerPhoneNumber(c); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -129,7 +123,7 @@ func (a *App) createOrderHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Validate input
-	if err := o.ValidateCustomerPhoneNumber(); err != nil {
+	if err := validateCustomerPhoneNumber(o); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -157,8 +151,8 @@ func (a *App) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get order status from DB
-	o := order{OrderID: orderID}
-	if err := o.getStatus(a.DB); err != nil {
+	var s status
+	if err := s.getStatus(a.DB, orderID); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			responseErrorHandler(w, http.StatusNotFound, "Order not found")
@@ -169,7 +163,7 @@ func (a *App) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write HTTP response
-	responseWriter(w, http.StatusOK, o.OrderStatus)
+	responseWriter(w, http.StatusOK, s.StatusName)
 }
 
 // Handler to cancel an order
@@ -182,23 +176,25 @@ func (a *App) cancelOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var o order
-	o.OrderID = orderID
+	// var o order
+	// o.OrderID = orderID
+
+	var s status
 
 	// Write to DB (Update a row)
-	if err := o.cancelOrder(a.DB); err != nil {
+	if err := s.cancelOrder(a.DB, orderID); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	// Create a HTTP Response payload
-	payload := map[string]string{
-		"orderId":     strconv.Itoa(o.OrderID),
-		"orderStatus": o.OrderStatus,
-	}
+	// payload := map[string]string{
+	// 	"orderId":    strconv.Itoa(orderID),
+	// 	"statusName": s.StatusName,
+	// }
 
 	// Write HTTP response
-	responseWriter(w, http.StatusOK, payload)
+	responseWriter(w, http.StatusOK, s.StatusName)
 }
 
 // Handler to fetch orders given the customer phone number
@@ -214,7 +210,7 @@ func (a *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Validate input
-	if err := o.ValidateCustomerPhoneNumber(); err != nil {
+	if err := validateCustomerPhoneNumber(o); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -243,4 +239,51 @@ func (a *App) getAvailablePizzasHandler(w http.ResponseWriter, r *http.Request) 
 
 	// Write HTTP response
 	responseWriter(w, http.StatusOK, orders)
+}
+
+// Handler to fetch the list of order status
+// Used by store employees
+func (a *App) getStatusCodeHandler(w http.ResponseWriter, r *http.Request) {
+	var s status
+
+	// Get data from DB
+	orders, err := s.getStatusCode(a.DB)
+	if err != nil {
+		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Write HTTP response
+	responseWriter(w, http.StatusOK, orders)
+}
+
+// Handler to update an order status
+// Used by store employees
+func (a *App) updateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
+	// Create route variable and retrieve 'orderId' from a Request URL
+	vars := mux.Vars(r)
+	orderID, err := strconv.Atoi(vars["orderId"])
+	if err != nil {
+		responseErrorHandler(w, http.StatusBadRequest, "Invalid order ID")
+		return
+	}
+
+	var o order
+	o.OrderID = orderID
+
+	// Write to DB (Update a row)
+	if err := o.updateOrderStatus(a.DB); err != nil {
+		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Create a HTTP Response payload
+	// Payload contains the orderId and orderStatus
+	payload := map[string]interface{}{
+		"orderId":     strconv.Itoa(o.OrderID),
+		"orderStatus": fmt.Sprintf("%v", o.OrderStatus),
+	}
+
+	// Write HTTP response
+	responseWriter(w, http.StatusOK, payload)
 }
