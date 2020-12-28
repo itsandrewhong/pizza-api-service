@@ -123,7 +123,7 @@ func (p *pizza) getAvailablePizzas(db *sql.DB) ([]pizza, error) {
 	return pizzas, nil
 }
 
-// Get the list of status code (used by the store employee)
+// Get the list of status code (used by the store employees)
 // Returns the list of status codes
 func (s *status) getStatusCode(db *sql.DB) ([]status, error) {
 	// Run the query
@@ -145,8 +145,8 @@ func (s *status) getStatusCode(db *sql.DB) ([]status, error) {
 	return statuses, nil
 }
 
-// Updates the order status (used by the store employee)
-// Returns
+// Updates the order status (used by the store employees)
+// Returns the order status.
 func (o *order) updateOrderStatus(db *sql.DB) error {
 	// Calls the Stored Procedure 'PAS_SP_UPDATE_ORDER_STATUS'
 	return db.QueryRow("CALL PAS_SP_UPDATE_ORDER_STATUS($1, $2)", o.OrderID, o.OrderStatus).Scan(&o.OrderStatus)
