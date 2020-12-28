@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -22,9 +24,19 @@ type App struct {
 
 // Initialize a connection with the DB and initialize the router
 func (a *App) Initialize() {
-	// Connect to the DB (Heroku Postgres)
+
+	// Get connection string from Heroku
+	connString := os.Getenv("DATABASE_URL")
+
+	// For local testing, set connection string manually
+	if connString == "" {
+		connString = getConnString()
+		log.Println("Using manual connection")
+	}
+
+	// Connect to the DB
 	var err error
-	a.DB, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	a.DB, err = sql.Open("postgres", connString)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,16 +85,29 @@ func responseWriter(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-// CustomerPhoneNumber cannot be empty, and must be a string consisting of ten digits
-func validateCustomerPhoneNumber(i interface{}) error {
-	switch v := i.(type) {
-	case order:
-		return validation.ValidateStruct(&v, validation.Field(&v.CustomerPhoneNumber, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{10}$"))))
-	case customer:
-		return validation.ValidateStruct(&v, validation.Field(&v.CustomerPhoneNumber, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{10}$"))))
+// Helper: Get DB connection string from file
+func getConnString() string {
+	connString, err := ioutil.ReadFile("cstrings.config")
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	return nil
+	return string(connString)
+}
+
+// CustomerPhoneNumber cannot be empty, and must be a string consisting of ten digits
+func validateCustomerPhoneNumber(i interface{}) error {
+	// Compile the expression once
+	re := regexp.MustCompile("^[0-9]{10}$")
+
+	switch v := i.(type) {
+	case order:
+		return validation.ValidateStruct(&v, validation.Field(&v.CustomerPhoneNumber, validation.Required, validation.Match(re)))
+	case customer:
+		return validation.ValidateStruct(&v, validation.Field(&v.CustomerPhoneNumber, validation.Required, validation.Match(re)))
+	}
+
+	return errors.New("validateCustomerPhoneNumber: invalid type provided")
 }
 
 // Handler to create a new customer.
