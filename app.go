@@ -25,10 +25,9 @@ type App struct {
 // Initialize a connection with the DB and initialize the router
 func (a *App) Initialize() {
 
-	// Get connection string from Heroku
+	// Get the connection string from Heroku
+	// If above operation fails, set connection string manually for local test
 	connString := os.Getenv("DATABASE_URL")
-
-	// For local testing, set connection string manually
 	if connString == "" {
 		connString = getConnString()
 		log.Println("Using manual connection")
@@ -123,13 +122,13 @@ func (a *App) createCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Validate input
+	// Validate customer phone number
 	if err := validateCustomerPhoneNumber(c); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// Write to DB
+	// Write customer data to DB
 	if err := c.createCustomer(a.DB); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
@@ -156,13 +155,13 @@ func (a *App) createOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Validate input
+	// Validate customer phone number
 	if err := validateCustomerPhoneNumber(o); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// Write to DB
+	// Write order data to DB
 	if err := o.createOrder(a.DB); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
@@ -189,7 +188,7 @@ func (a *App) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get order status from DB
+	// Get the current order status from DB
 	var s status
 	if err := s.getStatus(a.DB, orderID); err != nil {
 		switch err {
@@ -210,7 +209,7 @@ func (a *App) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 	responseWriter(w, http.StatusOK, payload)
 }
 
-// Handler to cancel an order
+// Handler to cancel an order.
 func (a *App) cancelOrderHandler(w http.ResponseWriter, r *http.Request) {
 	// Create route variable and retrieve 'orderId' from a Request URL
 	vars := mux.Vars(r)
@@ -219,10 +218,9 @@ func (a *App) cancelOrderHandler(w http.ResponseWriter, r *http.Request) {
 		responseErrorHandler(w, http.StatusBadRequest, "Invalid order ID")
 		return
 	}
-
 	var s status
 
-	// Write to DB (Update a row)
+	// Update a row in DB
 	if err := s.cancelOrder(a.DB, orderID); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
@@ -249,13 +247,13 @@ func (a *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Validate input
+	// Validate customer phone number
 	if err := validateCustomerPhoneNumber(o); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// Get data from DB
+	// Get order data from DB
 	orders, err := o.getOrders(a.DB)
 	if err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
@@ -270,7 +268,7 @@ func (a *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) getAvailablePizzasHandler(w http.ResponseWriter, r *http.Request) {
 	var p pizza
 
-	// Get data from DB
+	// Get the list of available pizzas from DB
 	orders, err := p.getAvailablePizzas(a.DB)
 	if err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
@@ -286,7 +284,7 @@ func (a *App) getAvailablePizzasHandler(w http.ResponseWriter, r *http.Request) 
 func (a *App) getStatusCodeHandler(w http.ResponseWriter, r *http.Request) {
 	var s status
 
-	// Get data from DB
+	// Get order status from DB
 	orders, err := s.getStatusCode(a.DB)
 	if err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
@@ -311,7 +309,7 @@ func (a *App) updateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Write to DB (Update a row)
+	// Update a row in DB
 	if err := o.updateOrderStatus(a.DB); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
