@@ -1,5 +1,5 @@
 # pizza-api-service
-A simple REST API application for Pizza Ordering System using `Golang`, `PostgreSQL` as database, and `Gorilla Mux` for routing
+A simple REST API application for Pizza Ordering System using `Golang`, `PostgreSQL`, and `Gorilla Mux`.
 
 ## Pizza Ordering System business logic:
 - [MVP] **Create** a new customer in response to a valid `POST` request at `/customer/add` with first name, last name, and customer phone number.
@@ -12,9 +12,9 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 - **Update** an order in response to a valid `PUT` request at `/order/update` with order ID and order status code. (Store Only)
 
 ## App Dependencies
-1. 'mux' - Gorilla Mux router, used to create complex routing and managing requests
-2. 'pq' - PostgreSQL driver, used to store the data
-3. 'ozzo-validation' - Input validation, used to validate the user input (phone number, name, etc.)
+1. `mux` - Gorilla Mux router, used to create complex routing and managing requests
+2. `pq` - PostgreSQL driver, used to store the data
+3. `ozzo-validation` - Input validation, used to validate the user input (phone number, name, etc.)
 
 ## File Structure
 * `main.go`: Initializes DB connection and Runs the application.
