@@ -33,6 +33,13 @@ This application uses:
 # Example) Test the application via cURL commands
 - ***NOTE: The application is hosted on Heroku (free-tier). The DB will sleep after a half hour of inactivity, and it causes a delay of a few seconds for the first request upon waking.***
 
+
+
+
+
+
+
+
 ## Create a new customer
 * A phone number is unique. A customer can only create one account using the same phone number. 
 * A phone number must be a non-null string consisting exactly ten digits without country code (e.g. 8125984475).
@@ -131,6 +138,12 @@ curl -v -XPUT -H "Content-type: application/json" -d '{"orderId": 9, "orderStatu
 # Response
 {"orderId":"9","orderStatus":"Making Your Pizza"}
 ```
+
+
+
+
+
+
 
 ## Database: Stored Procedure Definitions
 ```sql
