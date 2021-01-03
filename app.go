@@ -1,46 +1,33 @@
 package main
 
 import (
+	"context"
 	"database/sql"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"regexp"
-	"strconv"
+	"time"
 
-	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/shaj13/go-guardian/auth"
 )
+
+var authenticator auth.Authenticator
+var cache store.Cache
 
 type App struct {
 	Router *mux.Router
 	DB     *sql.DB
 }
 
-// Initialize a connection with the DB and initialize the router
+// Initialize a DB connection and initialize the router
 func (a *App) Initialize() {
+	a.initDB()
 
-	// Get the connection string from Heroku
-	// If above operation fails, set connection string manually for local test
-	connString := os.Getenv("DATABASE_URL")
-	if connString == "" {
-		connString = getConnString()
-		log.Println("Using manual connection")
-	}
+	// Init GoGuardian
+	setupGoGuardian()
 
-	// Connect to the DB
-	var err error
-	a.DB, err = sql.Open("postgres", connString)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a new router and initialize routes
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
 }
@@ -51,8 +38,35 @@ func (a *App) Run(addr string) {
 	log.Fatal(http.ListenAndServe(addr, a.Router))
 }
 
+// Get the connection string from Heroku
+// If above operation fails, set connection string manually for local
+func (a *App) initDB() {
+	connString := os.Getenv("DATABASE_URL")
+	if connString == "" {
+		connString = getConnString()
+		log.Println("Using local connection")
+	}
+
+	var err error
+	a.DB, err = sql.Open("postgres", connString)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 // Initialize routes
 func (a *App) initializeRoutes() {
+
+	//
+	a.Router.HandleFunc("/v1/auth/signup", Signup).Methods("POST")
+
+	// Route for obtaining a bearer token
+	// Wrap the 'CreateToken' function with middleware to authenticate the request
+	a.Router.HandleFunc("/v1/auth/token", middleware(http.HandlerFunc(CreateToken))).Methods("GET")
+
+	// Route for accessing a protected resource that returns a book author by id
+	a.Router.HandleFunc("/v1/book/{id}", middleware(http.HandlerFunc(GetBookAuthor))).Methods("GET")
+
 	// Create a new customer
 	a.Router.HandleFunc("/customer/add", a.createCustomerHandler).Methods("POST")
 	// Create a new order
@@ -71,256 +85,35 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/order/update", a.updateOrderStatusHandler).Methods("PUT")
 }
 
-// Helper: Handle error message
-func responseErrorHandler(w http.ResponseWriter, code int, message string) {
-	responseWriter(w, code, map[string]string{"error": message})
+// Setup Go-Guardian
+func setupGoGuardian() {
+
+	// Create an authenticator
+	authenticator = auth.New()
+	cache = store.NewFIFO(context.Background(), time.Minute*10)
+
+	// Dispatch the authenticator to strategies
+	basicStrategy := basic.New(ValidateUser, cache)
+	tokenStrategy := bearer.New(VerifyToken, cache)
+	authenticator.EnableStrategy(basic.StrategyKey, basicStrategy)
+
+	// Cache the authentication decision to improve server performance
+	authenticator.EnableStrategy(bearer.CachedStrategyKey, tokenStrategy)
 }
 
-// Helper: Write HTTP response in JSON format
-func responseWriter(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
-}
+// HTTP middleware to intercept the request and authenticate users before it reaches the final route
+// This middleware will check if an access token exists and is valid. If it passes the checks, the request will proceed. If not, a 401 Authorization error is returned.
 
-// Helper: Get DB connection string from file
-func getConnString() string {
-	connString, err := ioutil.ReadFile("cstrings.config")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return string(connString)
-}
-
-// CustomerPhoneNumber cannot be empty, and must be a string consisting of ten digits
-func validateCustomerPhoneNumber(i interface{}) error {
-	// Compile the expression once
-	re := regexp.MustCompile("^[0-9]{10}$")
-
-	switch v := i.(type) {
-	case order:
-		return validation.ValidateStruct(&v, validation.Field(&v.CustomerPhoneNumber, validation.Required, validation.Match(re)))
-	case customer:
-		return validation.ValidateStruct(&v, validation.Field(&v.CustomerPhoneNumber, validation.Required, validation.Match(re)))
-	}
-
-	return errors.New("validateCustomerPhoneNumber: invalid type provided")
-}
-
-// Handler to create a new customer.
-// Takes a request body in JSON format and uses 'createCustomer' to create a customer.
-func (a *App) createCustomerHandler(w http.ResponseWriter, r *http.Request) {
-	var c customer
-	decoder := json.NewDecoder(r.Body)
-
-	// Decode the HTTP Body Data
-	if err := decoder.Decode(&c); err != nil {
-		responseErrorHandler(w, http.StatusBadRequest, "Bad Request")
-		return
-	}
-	defer r.Body.Close()
-
-	// Validate customer phone number
-	if err := validateCustomerPhoneNumber(c); err != nil {
-		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// Write customer data to DB
-	if err := c.createCustomer(a.DB); err != nil {
-		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// Create a HTTP Response payload
-	payload := map[string]string{
-		"customerPhoneNumber": c.CustomerPhoneNumber,
-	}
-
-	// Write HTTP response
-	responseWriter(w, http.StatusCreated, payload)
-}
-
-// Handler to create a new order.
-func (a *App) createOrderHandler(w http.ResponseWriter, r *http.Request) {
-	var o order
-	decoder := json.NewDecoder(r.Body)
-
-	// Decode the HTTP Body Data
-	if err := decoder.Decode(&o); err != nil {
-		responseErrorHandler(w, http.StatusBadRequest, "Bad Request")
-		return
-	}
-	defer r.Body.Close()
-
-	// Validate customer phone number
-	if err := validateCustomerPhoneNumber(o); err != nil {
-		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// Write order data to DB
-	if err := o.createOrder(a.DB); err != nil {
-		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// Create a HTTP Response payload
-	payload := map[string]int{
-		"orderId": o.OrderID,
-	}
-
-	// Write HTTP response
-	responseWriter(w, http.StatusCreated, payload)
-}
-
-// Handler to fetch the order status.
-// Retrieves the order id and returns the order status.
-// If order is not found, respond with status code 404, if found, return the order status.
-func (a *App) getStatusHandler(w http.ResponseWriter, r *http.Request) {
-	// Create route variable and retrieve 'orderId' from a Request URL
-	vars := mux.Vars(r)
-	orderID, err := strconv.Atoi(vars["orderId"])
-	if err != nil {
-		responseErrorHandler(w, http.StatusBadRequest, "Invalid order ID")
-		return
-	}
-
-	// Get the current order status from DB
-	var s status
-	if err := s.getStatus(a.DB, orderID); err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			responseErrorHandler(w, http.StatusNotFound, "Order not found")
-		default:
-			responseErrorHandler(w, http.StatusInternalServerError, err.Error())
+func middleware(next http.Handler) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Executing Auth Middleware")
+		user, err := authenticator.Authenticate(r)
+		if err != nil {
+			code := http.StatusUnauthorized
+			http.Error(w, http.StatusText(code), code)
+			return
 		}
-		return
-	}
-
-	// Create a HTTP Response payload
-	payload := map[string]string{
-		"orderStatus": s.StatusName,
-	}
-
-	// Write HTTP response
-	responseWriter(w, http.StatusOK, payload)
-}
-
-// Handler to cancel an order.
-func (a *App) cancelOrderHandler(w http.ResponseWriter, r *http.Request) {
-	// Create route variable and retrieve 'orderId' from a Request URL
-	vars := mux.Vars(r)
-	orderID, err := strconv.Atoi(vars["orderId"])
-	if err != nil {
-		responseErrorHandler(w, http.StatusBadRequest, "Invalid order ID")
-		return
-	}
-	var s status
-
-	// Update a row in DB
-	if err := s.cancelOrder(a.DB, orderID); err != nil {
-		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// Create a HTTP Response payload
-	payload := map[string]string{
-		"orderStatus": s.StatusName,
-	}
-
-	// Write HTTP response
-	responseWriter(w, http.StatusOK, payload)
-}
-
-// Handler to fetch orders given the customer phone number
-func (a *App) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
-	var o order
-	decoder := json.NewDecoder(r.Body)
-
-	// Decode the HTTP Body Data
-	if err := decoder.Decode(&o); err != nil {
-		responseErrorHandler(w, http.StatusBadRequest, "Bad Request")
-		return
-	}
-	defer r.Body.Close()
-
-	// Validate customer phone number
-	if err := validateCustomerPhoneNumber(o); err != nil {
-		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// Get order data from DB
-	orders, err := o.getOrders(a.DB)
-	if err != nil {
-		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// Write HTTP response
-	responseWriter(w, http.StatusOK, orders)
-}
-
-// Handler to fetch the list of available pizzas
-func (a *App) getAvailablePizzasHandler(w http.ResponseWriter, r *http.Request) {
-	var p pizza
-
-	// Get the list of available pizzas from DB
-	orders, err := p.getAvailablePizzas(a.DB)
-	if err != nil {
-		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// Write HTTP response
-	responseWriter(w, http.StatusOK, orders)
-}
-
-// Handler to fetch the list of order status
-// Used by store employees
-func (a *App) getStatusCodeHandler(w http.ResponseWriter, r *http.Request) {
-	var s status
-
-	// Get order status from DB
-	orders, err := s.getStatusCode(a.DB)
-	if err != nil {
-		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// Write HTTP response
-	responseWriter(w, http.StatusOK, orders)
-}
-
-// Handler to update an order status
-// Receives HTTP Body data
-// Used by store employees
-func (a *App) updateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
-	var o order
-	decoder := json.NewDecoder(r.Body)
-
-	// Decode the HTTP Body Data
-	if err := decoder.Decode(&o); err != nil {
-		responseErrorHandler(w, http.StatusBadRequest, "Bad Request")
-		return
-	}
-	defer r.Body.Close()
-
-	// Update a row in DB
-	if err := o.updateOrderStatus(a.DB); err != nil {
-		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// Create a HTTP Response payload
-	payload := map[string]interface{}{
-		"orderId":     strconv.Itoa(o.OrderID),
-		"orderStatus": fmt.Sprintf("%v", o.OrderStatus),
-	}
-
-	// Write HTTP response
-	responseWriter(w, http.StatusOK, payload)
+		log.Printf("User %s Authenticated\n", user.UserName())
+		next.ServeHTTP(w, r)
+	})
 }

@@ -11,10 +11,19 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 - **Fetch** the list of order status code in response to a valid `GET` request at `/status_code/show`. (Store Only)
 - **Update** an order in response to a valid `PUT` request at `/order/update` with order ID and order status code. (Store Only)
 
+## User Authentication
+This application uses:
+1. `bcrypt` algorithm to hash and salt the passwords,
+2. `jwt-go` to create a token and sign it with secret key and verify the token with public key instead of sessions for authentication,
+3. `go-guardian` to authenticate requests and cache the authentication decisions
+
 ## App Dependencies
 1. `mux` - Gorilla Mux router, used to create complex routing and managing requests
 2. `pq` - PostgreSQL driver, used to store the data
 3. `ozzo-validation` - Input validation, used to validate the user input (phone number, name, etc.)
+4. `go-guardian` - Used to create a simple API authentication
+5. `jwt-go` - Used to create and verify the token
+6. `bcrypt` - Used to encrypt (hash and salt) the user password
 
 ## File Structure
 * `main.go`: Initializes DB connection and Runs the application.

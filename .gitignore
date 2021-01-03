@@ -4,6 +4,9 @@
 # DB Connection String
 cstrings.config
 
+# Hide private key folder
+key/
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

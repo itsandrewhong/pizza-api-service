@@ -11,6 +11,8 @@ type customer struct {
 	FirstName           string `json:"firstName"`
 	LastName            string `json:"lastName"`
 	CustomerPhoneNumber string `json:"customerPhoneNumber"`
+	Username            string `json:"username"`
+	Password            string `json:"password"`
 }
 
 // Create a struct that holds the 'order' information
