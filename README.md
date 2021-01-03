@@ -38,7 +38,6 @@ This application uses:
 - ***NOTE: The application is hosted on Heroku (free-tier). The DB will sleep after a half hour of inactivity, and it causes a delay of a few seconds for the first request upon waking.***
 
 
-
 # CHANGE IN PROGRESS
 
 
