@@ -1,5 +1,5 @@
 # pizza-api-service
-A simple REST API application for Pizza Ordering System using `Golang`, `PostgreSQL`, and `Gorilla Mux`.
+A simple REST API application for Pizza Ordering System with token-based authentication.
 
 ## Pizza Ordering System business logic:
 - [MVP] **Create** a new customer in response to a valid `POST` request at `/customer/add` with first name, last name, and customer phone number.
@@ -13,29 +13,33 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 
 ## User Authentication
 This application uses:
-1. `bcrypt` algorithm to hash and salt the passwords,
-2. `jwt-go` to create a token and sign it with secret key and verify the token with public key instead of sessions for authentication (Created token is valid for 24 hours),
+1. `bcrypt` algorithm to hash and salt the customer's password
+2. `jwt-go` to implement a stateless authentication; create a token, sign it with the server's secret key (token is valid for 24 hours), and validate/verify the token,
 3. `go-guardian` to authenticate requests and cache the authentication decisions
 
 ## App Dependencies
 1. `mux` - Gorilla Mux router, used to create complex routing and managing requests
 2. `pq` - PostgreSQL driver, used to store the data
 3. `ozzo-validation` - Input validation, used to validate the user input (phone number, name, etc.)
-4. `go-guardian` - Used to create a simple API authentication
+4. `go-guardian` - A simple API authentication
 5. `jwt-go` - Used to create and verify the token
 6. `bcrypt` - Used to encrypt (hash and salt) the user password
 
 ## File Structure
 * `main.go`: Initializes DB connection and Runs the application.
-* `app.go`: Contains the API business logic, definition to connect app with the DB, and definition to run the application.
+* `app.go`: Contains routes, definition to connect app with the DB, and definition to run the application.
+* `handler.go`: Contains the API business logic.
 * `model.go`: Setup structs to connect Golang with DB(Postgres) and interacts with the Database.
+* `authHandler.go`: Contains the functions to create, validate, and verify a token.
+* `helper.go`: Contains the helper functions that support the application.
 
-# Example) Test the application via cURL commands
+
+# Test the application via cURL commands
 - ***NOTE: The application is hosted on Heroku (free-tier). The DB will sleep after a half hour of inactivity, and it causes a delay of a few seconds for the first request upon waking.***
 
 
 
-
+# CHANGE IN PROGRESS
 
 
 
@@ -47,8 +51,12 @@ This application uses:
 # Request
 curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "lastName":"Raymond", "customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/customer/add'
 
+# Example
+
+
+
 # Response
-{"customerPhoneNumber":"8125984475"}*
+{"customerPhoneNumber":"8125984475"}
 ```
 
 ## Get the list of available pizzas
@@ -57,6 +65,9 @@ curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "las
 ```bash
 # Request
 curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/pizza/show'
+
+# Example
+
 
 # Response
 [{"pizzaId":1,"pizzaName":"Cheese Pizza","pizzaPrice":6.99},
@@ -77,6 +88,9 @@ curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.her
 # Request
 curl -v -XPOST -H "Content-type: application/json" -d '{"pizzaId": 4, "customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/order/add'
 
+# Example
+
+
 # Response
 {"orderId":9}
 ```
@@ -87,6 +101,9 @@ curl -v -XPOST -H "Content-type: application/json" -d '{"pizzaId": 4, "customerP
 # Request
 # curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/<orderId>'
 curl -v -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/9'
+
+# Example
+
 
 # Response
 {"orderStatus":"Order Received"}
@@ -107,6 +124,9 @@ curl -v -XPUT -H "Content-type: application/json" 'https://pizza-api-service.her
 * Customers can view their order history with orderId, order status, etc.
 ```bash
 # Request
+curl -v -XGET -H "Content-type: application/json" -d '{"customerPhoneNumber":"<customerPhoneNumber>"}' 'https://pizza-api-service.herokuapp.com/order/show'
+
+# Example
 curl -v -XGET -H "Content-type: application/json" -d '{"customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/order/show'
 
 # Response
@@ -118,6 +138,9 @@ curl -v -XGET -H "Content-type: application/json" -d '{"customerPhoneNumber":"81
 ```bash
 # Request
 curl -XGET -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/status_code/show'
+
+# Example
+
 
 # Response
 [{"statusId":1,"statusName":"Order Received"},
@@ -131,8 +154,9 @@ curl -XGET -H "Content-type: application/json" 'https://pizza-api-service.heroku
 * Allows the store employees to update the order status.
 ```bash
 # Request
-# curl -v -XPUT -H "Content-type: application/json" -d '{"orderId": <orderId>, "orderStatus":<orderStatusCode>}' 'https://pizza-api-service.herokuapp.com/order/update'
+curl -v -XPUT -H "Content-type: application/json" -d '{"orderId": <orderId>, "orderStatus":<orderStatusCode>}' 'https://pizza-api-service.herokuapp.com/order/update'
 
+# Example
 curl -v -XPUT -H "Content-type: application/json" -d '{"orderId": 9, "orderStatus":2}' 'https://pizza-api-service.herokuapp.com/order/update'
 
 # Response
