@@ -17,7 +17,12 @@ github.com/lib/pq/scram
 # github.com/shaj13/go-guardian v1.5.11
 ## explicit
 github.com/shaj13/go-guardian/auth
+github.com/shaj13/go-guardian/auth/strategies/basic
+github.com/shaj13/go-guardian/auth/strategies/bearer
+github.com/shaj13/go-guardian/auth/strategies/token
 github.com/shaj13/go-guardian/errors
+github.com/shaj13/go-guardian/internal
+github.com/shaj13/go-guardian/store
 # github.com/stretchr/testify v1.6.1
 ## explicit
 # golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad

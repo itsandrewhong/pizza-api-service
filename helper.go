@@ -7,17 +7,18 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-// ResponseErrorHandler - Handle error message
+// Handle error message
 func responseErrorHandler(w http.ResponseWriter, code int, message string) {
 	responseWriter(w, code, map[string]string{"error": message})
 }
 
-// ResponseWriter - Write HTTP response in JSON format
+// Write HTTP response in JSON format
 func responseWriter(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)
 	w.Header().Set("Content-Type", "application/json")
@@ -25,7 +26,7 @@ func responseWriter(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-// GetConnString - Get DB connection string from file
+// Get DB connection string from file
 func getConnString() string {
 	connString, err := ioutil.ReadFile("cstrings.config")
 	if err != nil {
@@ -37,7 +38,7 @@ func getConnString() string {
 
 // CustomerPhoneNumber cannot be empty, and must be a string consisting of ten digits
 func validateCustomerPhoneNumber(i interface{}) error {
-	// Compile the expression once
+	// Compile the regex expression once
 	re := regexp.MustCompile("^[0-9]{10}$")
 
 	switch v := i.(type) {
@@ -50,11 +51,23 @@ func validateCustomerPhoneNumber(i interface{}) error {
 	return errors.New("validateCustomerPhoneNumber: invalid type provided")
 }
 
+// Reads a RSA key from a file/env and decodes the key
 func rsaKeySetup() []byte {
-	priv, err := ioutil.ReadFile("key/jwtRS256.key")
-	if err != nil {
-		log.Println("No RSA private key found,")
-		panic(err)
+	var priv []byte
+	var err error
+
+	privString := os.Getenv("PRIVATE_KEY")
+
+	if privString == "" {
+		log.Println("No key found on cloud env, using local key")
+
+		priv, err = ioutil.ReadFile("key/jwtRS256.key")
+		if err != nil {
+			log.Println("No RSA private key found, halting the application")
+			panic(err)
+		}
+	} else {
+		priv = []byte(privString)
 	}
 
 	privPem, _ := pem.Decode(priv)

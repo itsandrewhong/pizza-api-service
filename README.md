@@ -14,7 +14,7 @@ A simple REST API application for Pizza Ordering System using `Golang`, `Postgre
 ## User Authentication
 This application uses:
 1. `bcrypt` algorithm to hash and salt the passwords,
-2. `jwt-go` to create a token and sign it with secret key and verify the token with public key instead of sessions for authentication,
+2. `jwt-go` to create a token and sign it with secret key and verify the token with public key instead of sessions for authentication (Created token is valid for 24 hours),
 3. `go-guardian` to authenticate requests and cache the authentication decisions
 
 ## App Dependencies

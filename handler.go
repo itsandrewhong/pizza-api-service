@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Handler to create a new customer.
@@ -29,8 +30,11 @@ func (a *App) createCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Salt and hash the password using the 'bcrypt' algorithm with salt of 10 rounds (bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
+
 	// Write customer data to DB
-	if err := c.createCustomer(a.DB); err != nil {
+	if err = c.createCustomer(a.DB, string(hashedPassword)); err != nil {
 		responseErrorHandler(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -180,8 +184,7 @@ func (a *App) getAvailablePizzasHandler(w http.ResponseWriter, r *http.Request) 
 	responseWriter(w, http.StatusOK, orders)
 }
 
-// Handler to fetch the list of order status
-// Used by store employees
+// Handler to fetch the list of order status (Used by store employees)
 func (a *App) getStatusCodeHandler(w http.ResponseWriter, r *http.Request) {
 	var s status
 
@@ -196,9 +199,7 @@ func (a *App) getStatusCodeHandler(w http.ResponseWriter, r *http.Request) {
 	responseWriter(w, http.StatusOK, orders)
 }
 
-// Handler to update an order status
-// Receives HTTP Body data
-// Used by store employees
+// Handler to update an order status (Used by store employees)
 func (a *App) updateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
 	var o order
 	decoder := json.NewDecoder(r.Body)
