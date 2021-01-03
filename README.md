@@ -33,10 +33,8 @@ This application uses:
 * `authHandler.go`: Contains the functions to create, validate, and verify a token.
 * `helper.go`: Contains the helper functions that support the application.
 
-
 # Test the application via cURL commands
 - ***NOTE: The application is hosted on Heroku (free-tier). The DB will sleep after a half hour of inactivity, and it causes a delay of a few seconds for the first request upon waking.***
-
 
 ## Create a new customer
 * A phone number is unique. A customer can only create one account using the same phone number. 
@@ -52,9 +50,7 @@ curl -v -XPOST -H "Content-type: application/json" -d '{"firstName":"Carl", "las
 {"customerPhoneNumber":"8125984475"}
 ```
 
-
-
-# Obtain a user access token
+## Obtain a user access token
 ```bash
 # Request Definition
 curl -k 'https://pizza-api-service.herokuapp.com/auth/token' -u "<username>:<password>"
@@ -65,8 +61,6 @@ curl -k 'https://pizza-api-service.herokuapp.com/auth/token' -u "alice@gmail.com
 # Response
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhbnkiLCJleHAiOjE2MDk3ODgwMjIsImlzcyI6ImF1dGgtYXBwIiwic3ViIjoibWVkaXVtIn0.hrLAEbHKLHrTXG7_9TVot8Dubq2hHia5khMQeTUqJLs
 ```
-
-
 
 ## Get the list of available pizzas
 * This application uses a numeric pizzaId to create an order. This way, the store can update the pizza info when needed.
@@ -90,8 +84,6 @@ curl -XGET -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdW
 {"pizzaId":9,"pizzaName":"Supreme Pizza","pizzaPrice":12.99}]
 ```
 
-
-
 ## Create a new order
 * A customer can create multiple orders.
 * An orderID is returned as the HTTP Response and this orderID will be used to track the progress of the order, cancel/update the order.
@@ -103,10 +95,10 @@ curl -XPOST -H 'Authorization: Bearer <token>' -H "Content-type: application/jso
 curl -XPOST -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhbnkiLCJleHAiOjE2MDk3ODgwMjIsImlzcyI6ImF1dGgtYXBwIiwic3ViIjoibWVkaXVtIn0.hrLAEbHKLHrTXG7_9TVot8Dubq2hHia5khMQeTUqJLs' -H "Content-type: application/json" -d '{"pizzaId": 4, "customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/order/add'
 
 # Response
-{"orderId":9}
+{"orderId":11}
 ```
 
-
+### Please take note of the 'orderId'. OrederId is required to check the order status and cancel the order.
 
 ## Check status of the order
 * Allows to check the status of the order given the orderId in the URL
@@ -115,13 +107,11 @@ curl -XPOST -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhd
 curl -v -XGET -H 'Authorization: Bearer <token>' -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/<orderId>'
 
 # Example Request
-curl -v -XGET -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhbnkiLCJleHAiOjE2MDk3ODgwMjIsImlzcyI6ImF1dGgtYXBwIiwic3ViIjoibWVkaXVtIn0.hrLAEbHKLHrTXG7_9TVot8Dubq2hHia5khMQeTUqJLs' -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/9'
+curl -v -XGET -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhbnkiLCJleHAiOjE2MDk3ODgwMjIsImlzcyI6ImF1dGgtYXBwIiwic3ViIjoibWVkaXVtIn0.hrLAEbHKLHrTXG7_9TVot8Dubq2hHia5khMQeTUqJLs' -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/show/11'
 
 # Response
 {"orderStatus":"Order Received"}
 ```
-
-
 
 ## Cancel an order
 * A cusotmer may have changered his/her mind, the application allows to cancel an order given the orderId in the URL
@@ -130,15 +120,13 @@ curl -v -XGET -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ
 curl -v -XPUT -H 'Authorization: Bearer <token>' -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/update/<orderId>'
 
 # Example Request
-curl -v -XPUT -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhbnkiLCJleHAiOjE2MDk3ODgwMjIsImlzcyI6ImF1dGgtYXBwIiwic3ViIjoibWVkaXVtIn0.hrLAEbHKLHrTXG7_9TVot8Dubq2hHia5khMQeTUqJLs' -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/update/9'
+curl -v -XPUT -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhbnkiLCJleHAiOjE2MDk3ODgwMjIsImlzcyI6ImF1dGgtYXBwIiwic3ViIjoibWVkaXVtIn0.hrLAEbHKLHrTXG7_9TVot8Dubq2hHia5khMQeTUqJLs' -H "Content-type: application/json" 'https://pizza-api-service.herokuapp.com/order/update/11'
 
 # Response
 {"orderStatus":"Canceled"}
 ```
 
-
-
-# Get the list of orders by specific phone number
+## Get the list of orders by specific phone number
 * Customers can view their order history with orderId, order status, etc.
 ```bash
 # Request Definition
@@ -148,10 +136,8 @@ curl -v -XGET -H 'Authorization: Bearer <token>' -H "Content-type: application/j
 curl -v -XGET -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhbnkiLCJleHAiOjE2MDk3ODgwMjIsImlzcyI6ImF1dGgtYXBwIiwic3ViIjoibWVkaXVtIn0.hrLAEbHKLHrTXG7_9TVot8Dubq2hHia5khMQeTUqJLs' -H "Content-type: application/json" -d '{"customerPhoneNumber":"8125984475"}' 'https://pizza-api-service.herokuapp.com/order/show'
 
 # Response
-[{"orderId":9,"pizzaId":4,"orderTime":"2020-12-27T21:56:41.636116Z","customerPhoneNumber":"8125984475","orderStatus":"Canceled","totalPrice":8.49}]
+[{"orderId":11,"pizzaId":4,"orderTime":"2020-12-27T21:56:41.636116Z","customerPhoneNumber":"8125984475","orderStatus":"Canceled","totalPrice":8.49}]
 ```
-
-
 
 # Store Only: Get the list of order status
 * Displays the list of order status code
@@ -170,8 +156,6 @@ curl -XGET -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdW
 {"statusId":5,"statusName":"Canceled"}]
 ```
 
-
-
 # Store Only: Update the order status 
 * Allows the store employees to update the order status.
 ```bash
@@ -179,17 +163,11 @@ curl -XGET -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdW
 curl -v -XPUT -H 'Authorization: Bearer <token>' -H "Content-type: application/json" -d '{"orderId": <orderId>, "orderStatus":<orderStatusCode>}' 'https://pizza-api-service.herokuapp.com/order/update'
 
 # Example Request
-curl -v -XPUT -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhbnkiLCJleHAiOjE2MDk3ODgwMjIsImlzcyI6ImF1dGgtYXBwIiwic3ViIjoibWVkaXVtIn0.hrLAEbHKLHrTXG7_9TVot8Dubq2hHia5khMQeTUqJLs' -H "Content-type: application/json" -d '{"orderId": 9, "orderStatus":2}' 'https://pizza-api-service.herokuapp.com/order/update'
+curl -v -XPUT -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhbnkiLCJleHAiOjE2MDk3ODgwMjIsImlzcyI6ImF1dGgtYXBwIiwic3ViIjoibWVkaXVtIn0.hrLAEbHKLHrTXG7_9TVot8Dubq2hHia5khMQeTUqJLs' -H "Content-type: application/json" -d '{"orderId": 11, "orderStatus":2}' 'https://pizza-api-service.herokuapp.com/order/update'
 
 # Response
 {"orderId":"9","orderStatus":"Making Your Pizza"}
 ```
-
-
-
-
-
-
 
 ## Database: Stored Procedure Definitions
 ```sql
@@ -198,11 +176,13 @@ CREATE PROCEDURE PAS_SP_CREATE_CUSTOMER(
 	IN p_firstName VARCHAR(50),
 	IN p_lastName VARCHAR(50),
 	IN p_customerPhoneNumber VARCHAR(20),
+	IN p_userName VARCHAR(62),
+	IN p_password VARCHAR(60),
 	INOUT _customerId INTEGER DEFAULT null
 )
 LANGUAGE SQL
 AS $$
-	INSERT INTO CUSTOMERS VALUES (DEFAULT, TRIM(p_firstName), TRIM(p_lastName), TRIM(p_customerPhoneNumber), FALSE) RETURNING customerId;
+	INSERT INTO CUSTOMERS VALUES (DEFAULT, TRIM(p_firstName), TRIM(p_lastName), TRIM(p_customerPhoneNumber), TRIM(p_userName), TRIM(p_password), FALSE) RETURNING customerId;
 $$;
 
 -- Create an order (PAS_SP_CREATE_ORDER)
@@ -249,5 +229,15 @@ LANGUAGE SQL
 AS $$
 	UPDATE ORDERS SET statusId = p_statusId WHERE orderId = p_orderId;
 	SELECT sc.statusName FROM ORDERS AS o INNER JOIN ORDER_STATUS_CODES AS sc ON o.statusId = sc.statusId WHERE o.orderId = p_orderId;
+$$;
+
+-- Fetch a password given the username (PAS_SP_GET_CUSTOMER_PASSWORD)
+CREATE PROCEDURE PAS_SP_GET_CUSTOMER_PASSWORD(
+	IN p_userName VARCHAR(62),
+	INOUT _password VARCHAR(60) DEFAULT null
+)
+LANGUAGE SQL
+AS $$
+	SELECT password FROM CUSTOMERS WHERE username = p_userName;
 $$;
 ```

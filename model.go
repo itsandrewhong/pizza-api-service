@@ -38,14 +38,11 @@ type status struct {
 	StatusName string `json:"statusName"`
 }
 
-// Takes firstName, lastName, and customerPhoneNumber, and
+// Takes firstName, lastName, customerPhoneNumber, username, and hashedPassword and
 // creates a new row to 'CUSTOMERS' table with provided customer information, and returns the customerId
 func (c *customer) createCustomer(db *sql.DB, hashedPassword string) error {
 	// Calls the Stored Procedure and captures the customer id
-
 	err := db.QueryRow("CALL PAS_SP_CREATE_CUSTOMER($1, $2, $3, $4, $5)", c.FirstName, c.LastName, c.CustomerPhoneNumber, c.Username, hashedPassword).Scan(&c.CustomerID)
-
-	// err := db.QueryRow("INSERT INTO CUSTOMERS VALUES (DEFAULT, $1, $2, $3, $4, $5, FALSE) RETURNING customerId;", c.FirstName, c.LastName, c.CustomerPhoneNumber, c.Username, hashedPassword).Scan(&c.CustomerID)
 
 	if err != nil {
 		return err
@@ -149,10 +146,8 @@ func (o *order) updateOrderStatus(db *sql.DB) error {
 
 // Retrieves the hashed password given the username
 func (c *customer) getCustomerPassword(db *sql.DB) error {
-
-	// err := db.QueryRow("select password from CUSTOMERS where username=$1", c.Username).Scan(&c.Password)
+	// Calls the Stored Procedure 'PAS_SP_GET_CUSTOMER_PASSWORD'
 	err := db.QueryRow("CALL PAS_SP_GET_CUSTOMER_PASSWORD($1)", c.Username).Scan(&c.Password)
-
 	if err != nil {
 		return err
 	}
