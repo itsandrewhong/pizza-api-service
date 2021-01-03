@@ -59,48 +59,40 @@ func (a *App) initDB() {
 
 // Initialize routes
 func (a *App) initializeRoutes() {
-
-	// Create a new customer
+	// Route for creating a new customer
 	a.Router.HandleFunc("/customer/add", a.createCustomerHandler).Methods("POST")
 
 	// Route for obtaining a bearer token given the username and password
 	a.Router.HandleFunc("/auth/token", middleware(createTokenHandler))
 	http.Handle("/auth/token", a.Router)
 
-	// *** Wrap below functions with middleware to authenticate the request ***
+	// *** Wrap below functions with middleware to authenticate the request before they reach to the final route ***
 
-	// Create a new order
-	// a.Router.HandleFunc("/order/add", a.createOrderHandler).Methods("POST")
+	// Route for creating a new order
 	a.Router.HandleFunc("/order/add", middleware(a.createOrderHandler)).Methods("POST")
 	http.Handle("/order/add", a.Router)
 
-	// Get status of the order
-	// a.Router.HandleFunc("/order/show/{orderId:[0-9]+}", a.getStatusHandler).Methods("GET")
+	// Route for retrieving status of the order
 	a.Router.HandleFunc("/order/show/{orderId:[0-9]+}", middleware(a.getStatusHandler)).Methods("GET")
 	http.Handle("/order/show/{orderId:[0-9]+}", a.Router)
 
-	// Cancel an order
-	// a.Router.HandleFunc("/order/update/{orderId:[0-9]+}", a.cancelOrderHandler).Methods("PUT")
+	// Route for canceling an order
 	a.Router.HandleFunc("/order/update/{orderId:[0-9]+}", middleware(a.cancelOrderHandler)).Methods("PUT")
 	http.Handle("/order/update/{orderId:[0-9]+}", a.Router)
 
-	// Get list of orders by specific phone number
-	// a.Router.HandleFunc("/order/show", a.getOrdersHandler).Methods("GET")
+	// Route for retrieving list of orders by specific phone number
 	a.Router.HandleFunc("/order/show", middleware(a.getOrdersHandler)).Methods("GET")
 	http.Handle("/order/show", a.Router)
 
-	// Get the list of available pizzas
-	// a.Router.HandleFunc("/pizza/show", a.getAvailablePizzasHandler).Methods("GET")
+	// Route for retrieving the list of available pizzas
 	a.Router.HandleFunc("/pizza/show", middleware(a.getAvailablePizzasHandler)).Methods("GET")
 	http.Handle("/pizza/show", a.Router)
 
-	// Get the list of order status
-	// a.Router.HandleFunc("/status_code/show", a.getStatusCodeHandler).Methods("GET")
+	// Route for retrieving the list of order status
 	a.Router.HandleFunc("/status_code/show", middleware(a.getStatusCodeHandler)).Methods("GET")
 	http.Handle("/status_code/show", a.Router)
 
-	// Update the order status
-	// a.Router.HandleFunc("/order/update", a.updateOrderStatusHandler).Methods("PUT")
+	// Route for updating the order status
 	a.Router.HandleFunc("/order/update", middleware(a.updateOrderStatusHandler)).Methods("PUT")
 	http.Handle("/order/update", a.Router)
 }
