@@ -40,11 +40,13 @@ NOTE:
 * ***After a customer account has been created, a customer must [Obtain user access token](token.md) in order to view list of pizzas and make order related calls.***
 
 ## General Process Flow
-1. [Create customer](doc/signup.md)
-2. [Obtain user access token](doc/token.md)
+1. [Create a customer](doc/signup.md)
+2. [Obtain a user access token](doc/token.md)
 3. [Show available pizzas](doc/showPizzas.md)
-4. [Create new order](doc/createOrder.md)
-5. ...
+4. [Create a new order](doc/createOrder.md)
+5. [Check status of the order](doc/getOrderStatus.md)
+6. [Cancel an order](doc/cancelOrder.md)
+7. [Show orders by specific phone number](doc/getOrdersByPhoneNumber.md)
 
 ## Open Endpoints
 Open endpoints require no Authentication.
