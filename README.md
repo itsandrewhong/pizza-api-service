@@ -40,8 +40,8 @@ NOTE:
 * ***After a customer account has been created, a customer must [Obtain user access token](token.md) in order to view list of pizzas and make order related calls.***
 
 ## General Process Flow
-1. [Create customer](signup.md)
-2. [Obtain user access token](token.md)
+1. [Create customer](doc/signup.md)
+2. [Obtain user access token](doc/token.md)
 3. [Show available pizzas](doc/showPizzas.md)
 4. [Create new order](doc/createOrder.md)
 5. ...
